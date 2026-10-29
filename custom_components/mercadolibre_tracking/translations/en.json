@@ -1,7 +1,7 @@
 {
   "title": "Mercado Libre Compras",
   "application_credentials": {
-    "description": "Create an application in [DevCenter]({console_url}). Register `https://my.home-assistant.io/redirect/oauth` as the redirect URI and enable PKCE, read access and offline access. Enter the application's Client ID and Client Secret."
+    "description": "Create an application in [DevCenter]({console_url}). Register `{redirect_url}` as the redirect URI and enable PKCE, read access and offline access. Enter the application's Client ID and Client Secret."
   },
   "config": {
     "step": {

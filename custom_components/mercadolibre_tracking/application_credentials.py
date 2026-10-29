@@ -26,4 +26,7 @@ async def async_get_auth_implementation(
 
 
 async def async_get_description_placeholders(hass: HomeAssistant) -> dict[str, str]:
-    return {"console_url": "https://developers.mercadolibre.cl/devcenter"}
+    return {
+        "console_url": "https://developers.mercadolibre.cl/devcenter",
+        "redirect_url": "https://my.home-assistant.io/redirect/oauth",
+    }

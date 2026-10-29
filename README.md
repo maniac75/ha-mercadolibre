@@ -10,6 +10,12 @@ Integración para consultar tus compras y envíos de Mercado Libre Chile en Home
 - Actualización cada 30 minutos y renovación automática de la autorización.
 - Tarjeta opcional con iconos, productos, seguimiento e historial desplegable de todos los envíos disponibles.
 
+## Vista de ejemplo
+
+<img src="docs/images/card-example.png" alt="Tarjeta de Mercado Libre con envíos y productos ficticios" width="480">
+
+*Captura de Home Assistant con datos ficticios de demostración.*
+
 ## Instalar
 
 Añade este repositorio a HACS como **Integración**, descárgalo y reinicia Home Assistant. Después conecta tu cuenta con las [instrucciones de autorización](docs/AUTHORIZATION.md).

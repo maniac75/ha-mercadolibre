@@ -22,26 +22,26 @@ content: |
   {% endfor %}
   <details>
   <summary>{{ safe(labels.get(shipment.status, '❔ ' ~ shipment.status)) }} · {{ safe(products[0].name or 'Producto sin nombre') if products else 'Envío sin productos informados' }}{% if products | count > 1 %} · +{{ products | count - 1 }}{% endif %}</summary>
-  
+
   **🛒 Productos**
   {% for product in products %}
   - {{ safe(product.name or 'Producto sin nombre') }}{% if product.quantity is not none %} · **{{ safe(product.quantity) }} un.**{% endif %}
   {% else %}
   Sin detalle de productos.
   {% endfor %}
-  
+
   {% if shipment.substatus %}
   🏷️ **Detalle del estado:** {{ safe(sublabels.get(shipment.substatus, shipment.substatus | replace('_', ' '))) }}
   {% endif %}
-  
+
   {% if shipment.tracking_number %}
   🔎 **Seguimiento:** <code>{{ safe(shipment.tracking_number) }}</code>
   {% else %}
   🔎 Seguimiento aún no informado.
   {% endif %}
-  
+
   🆔 **Envío:** <code>{{ safe(shipment.shipment_id) }}</code>
-  
+
   {% if timing.last is not none %}
   🕒 **Último evento:** {{ timing.last | timestamp_custom('%d/%m/%Y %H:%M', true) }}
   {% if shipment.status not in terminal %}
@@ -49,7 +49,7 @@ content: |
   ⏱️ {{ 'Evento registrado hoy' if days == 0 else days ~ (' día' if days == 1 else ' días') ~ ' desde el último evento' }}
   {% endif %}
   {% endif %}
-  
+
   **📍 Historial completo disponible**
   {% for event in shipment.history or [] %}
   {% set ts = as_timestamp(event.date, none) %}
@@ -57,7 +57,7 @@ content: |
   {% else %}
   Sin eventos informados.
   {% endfor %}
-  
+
   </details>
   {% endmacro %}
   {% if states(entity) == 'unavailable' %}
@@ -79,11 +79,11 @@ content: |
   {% if state_attr(entity, 'unknown_shipments') %}
   ❔ {{ state_attr(entity, 'unknown_shipments') }} envíos con estado pendiente de clasificación.
   {% endif %}
-  
+
   {% if state_attr(entity, 'orders_checked') is not none %}
   🛍️ **Compras consultadas:** {{ state_attr(entity, 'orders_checked') }}{% if state_attr(entity, 'orders_total') is not none %} de {{ state_attr(entity, 'orders_total') }}{% endif %} · 📦 **Envíos encontrados:** {{ shipments | count }}
   {% endif %}
-  
+
   {% if active %}
   {% for shipment in active %}
   {{ package(shipment) }}
@@ -91,27 +91,27 @@ content: |
   {% else %}
   ✨ No hay envíos activos entre las compras consultadas.
   {% endif %}
-  
+
   {% if delivered %}
   <details>
   <summary>✅ Entregados · {{ delivered | count }}</summary>
-  
+
   {% for shipment in delivered %}
   {{ package(shipment) }}
   {% endfor %}
   </details>
   {% endif %}
-  
+
   {% if other %}
   <details>
   <summary>⚠️ Cancelados o no entregados · {{ other | count }}</summary>
-  
+
   {% for shipment in other %}
   {{ package(shipment) }}
   {% endfor %}
   </details>
   {% endif %}
-  
+
   {% if state_attr(entity, 'orders_without_shipment') %}
   🧾 **Compras sin envío asociado:** {{ state_attr(entity, 'orders_without_shipment') }}
   {% endif %}

@@ -8,7 +8,7 @@ Integración para consultar tus compras y envíos de Mercado Libre Chile en Home
 - Productos, cantidades, seguimiento e historial en sus atributos.
 - Compras que comparten envío agrupadas en un solo paquete.
 - Actualización cada 30 minutos y renovación automática de la autorización.
-- Tarjeta opcional con paquetes activos y finalizados.
+- Tarjeta opcional con iconos, productos, seguimiento e historial desplegable de todos los envíos disponibles.
 
 ## Instalar
 

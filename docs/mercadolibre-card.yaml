@@ -1,12 +1,121 @@
-{
-  "type": "markdown",
-  "title": "🛍️ Mercado Libre",
-  "entity_id": [
-    "sensor.mercado_libre_envios_en_seguimiento"
-  ],
-  "content": "{% set entity = 'sensor.mercado_libre_envios_en_seguimiento' %}\n{% set labels = {'pending': '⏳ Pendiente', 'handling': '🛠️ En preparación', 'ready_to_ship': '📦 Listo para despacho', 'shipped': '🚚 En camino', 'delivered': '✅ Entregado', 'cancelled': '🚫 Cancelado', 'not_delivered': '⚠️ No entregado'} %}\n{% set shipments = state_attr(entity, 'shipments') or [] %}\n{% set terminal = ['delivered', 'cancelled', 'not_delivered'] %}\n{% if states(entity) == 'unavailable' %}\n**🔌 Conexión no disponible.** Home Assistant volverá a consultar según su programación. Revisa la integración si solicita autorización.\n{% elif states(entity) == 'unknown' and not shipments %}\n**⏳ Esperando datos de Mercado Libre.**\n{% else %}\n{% if states(entity) not in ['unknown', 'unavailable'] %}\n## 📦 {{ states(entity) }} {{ 'paquete' if states(entity) == '1' else 'paquetes' }} en seguimiento\n{% else %}\n## 🔎 Seguimiento parcial\n{% endif %}\n{% if state_attr(entity, 'truncated') %}\nConsulta limitada a {{ state_attr(entity, 'orders_checked') }} de {{ state_attr(entity, 'orders_total') }} compras. No se muestra un total exacto de paquetes activos.\n{% endif %}\n{% if state_attr(entity, 'unknown_shipments') %}\nHay {{ state_attr(entity, 'unknown_shipments') }} envíos con estado aún no reconocido.\n{% endif %}\n{% set active = shipments | rejectattr('status', 'in', terminal) | list %}\n{% if not active %}\n✨ No hay paquetes activos entre los envíos consultados.\n{% endif %}\n{% for shipment in active[:8] %}\n### {{ labels.get(shipment.status, shipment.status) | e }}\n{% for product in shipment.products %}\n- {{ (product.name or 'Producto') | e }}{% if product.quantity %} · {{ product.quantity }} un.{% endif %}\n{% endfor %}\n{% if shipment.tracking_number %}🔎 Seguimiento: **{{ shipment.tracking_number | e }}**{% endif %}\n{% if shipment.substatus %}{{ '🏷️ Etiqueta de envío creada' if shipment.substatus == 'printed' else shipment.substatus | replace('_', ' ') | e }}{% endif %}\n{% set timing = namespace(last=none) %}\n{% for event in shipment.history %}\n{% set event_time = as_timestamp(event.date, none) %}\n{% if event_time is not none and event_time <= as_timestamp(now()) and (timing.last is none or event_time > timing.last) %}\n{% set timing.last = event_time %}\n{% endif %}\n{% endfor %}\n{% if timing.last is not none %}\n{% set idle_days = (now().date() - as_local(as_datetime(timing.last)).date()).days %}\n⏱️ **Último evento fechado:** {{ 'hoy' if idle_days == 0 else 'hace ' ~ idle_days ~ (' día' if idle_days == 1 else ' días') }}\n{% if idle_days >= 7 %}\n⏳ Revisar espera · 7 días o más sin nuevos eventos fechados.\n{% endif %}\n{% endif %}\n**🕒 Historial del envío**\n{% for event in shipment.history[-6:] %}\n{% set when = as_timestamp(event.date, none) %}\n- {% if when is not none %}{{ when | timestamp_custom('%d/%m %H:%M', true) }} · {% endif %}{{ labels.get(event.status, event.status) | e }}\n{% endfor %}\n---\n{% endfor %}\n{% if active | count > 8 %}Se muestran 8 de {{ active | count }} envíos activos o pendientes de clasificación.{% endif %}\n{% set completed = shipments | selectattr('status', 'in', terminal) | list %}\n{% if completed %}\n<details><summary>📬 Últimos envíos finalizados</summary>\n\n{% for shipment in completed[:4] %}\n**{{ labels.get(shipment.status, shipment.status) | e }}**\n{% for product in shipment.products %}\n- {{ (product.name or 'Producto') | e }}\n{% endfor %}\n{% if shipment.history %}\n{% set last = shipment.history[-1] %}\n{% set when = as_timestamp(last.date, none) %}\n🕒 Último evento: {% if when is not none %}{{ when | timestamp_custom('%d/%m %H:%M', true) }} · {% endif %}{{ labels.get(last.status, last.status) | e }}\n{% endif %}\n\n{% endfor %}\n</details>\n{% endif %}\n{% if state_attr(entity, 'orders_without_shipment') %}\n{{ state_attr(entity, 'orders_without_shipment') }} compras no tienen un envío asociado en la respuesta de la API.\n{% endif %}\n{% endif %}\n",
-  "grid_options": {
-    "columns": "full",
-    "rows": "auto"
-  }
-}
+type: markdown
+title: 🛍️ Mercado Libre
+entity_id:
+  - sensor.mercado_libre_envios_en_seguimiento
+content: |
+  {% set entity = 'sensor.mercado_libre_envios_en_seguimiento' %}
+  {% set labels = {'pending': '⏳ Pendiente', 'handling': '🛠️ En preparación', 'ready_to_ship': '📦 Listo para despacho', 'shipped': '🚚 En camino', 'delivered': '✅ Entregado', 'cancelled': '🚫 Cancelado', 'not_delivered': '⚠️ No entregado'} %}
+  {% set sublabels = {'ready_to_print': 'Etiqueta pendiente de impresión', 'printed': 'Etiqueta impresa', 'first_visit': 'Visita registrada'} %}
+  {% set shipments = state_attr(entity, 'shipments') or [] %}
+  {% set terminal = ['delivered', 'cancelled', 'not_delivered'] %}
+  {% macro safe(value) -%}
+  {{ value | string | e | replace('[', '&#91;') | replace(']', '&#93;') }}
+  {%- endmacro %}
+  {% macro package(shipment) %}
+  {% set products = shipment.products or [] %}
+  {% set timing = namespace(last=none) %}
+  {% for event in shipment.history or [] %}
+  {% set ts = as_timestamp(event.date, none) %}
+  {% if ts is not none and ts <= as_timestamp(now()) and (timing.last is none or ts > timing.last) %}
+  {% set timing.last = ts %}
+  {% endif %}
+  {% endfor %}
+  <details>
+  <summary>{{ safe(labels.get(shipment.status, '❔ ' ~ shipment.status)) }} · {{ safe(products[0].name or 'Producto sin nombre') if products else 'Envío sin productos informados' }}{% if products | count > 1 %} · +{{ products | count - 1 }}{% endif %}</summary>
+  
+  **🛒 Productos**
+  {% for product in products %}
+  - {{ safe(product.name or 'Producto sin nombre') }}{% if product.quantity is not none %} · **{{ safe(product.quantity) }} un.**{% endif %}
+  {% else %}
+  Sin detalle de productos.
+  {% endfor %}
+  
+  {% if shipment.substatus %}
+  🏷️ **Detalle del estado:** {{ safe(sublabels.get(shipment.substatus, shipment.substatus | replace('_', ' '))) }}
+  {% endif %}
+  
+  {% if shipment.tracking_number %}
+  🔎 **Seguimiento:** <code>{{ safe(shipment.tracking_number) }}</code>
+  {% else %}
+  🔎 Seguimiento aún no informado.
+  {% endif %}
+  
+  🆔 **Envío:** <code>{{ safe(shipment.shipment_id) }}</code>
+  
+  {% if timing.last is not none %}
+  🕒 **Último evento:** {{ timing.last | timestamp_custom('%d/%m/%Y %H:%M', true) }}
+  {% if shipment.status not in terminal %}
+  {% set days = (now().date() - as_local(as_datetime(timing.last)).date()).days %}
+  ⏱️ {{ 'Evento registrado hoy' if days == 0 else days ~ (' día' if days == 1 else ' días') ~ ' desde el último evento' }}
+  {% endif %}
+  {% endif %}
+  
+  **📍 Historial completo disponible**
+  {% for event in shipment.history or [] %}
+  {% set ts = as_timestamp(event.date, none) %}
+  - {% if ts is not none %}{{ ts | timestamp_custom('%d/%m/%Y %H:%M', true) }} · {% else %}Fecha no informada · {% endif %}{{ safe(labels.get(event.status, event.status or 'Estado no informado')) }}{% if event.substatus %} · {{ safe(sublabels.get(event.substatus, event.substatus | replace('_', ' '))) }}{% endif %}
+  {% else %}
+  Sin eventos informados.
+  {% endfor %}
+  
+  </details>
+  {% endmacro %}
+  {% if states(entity) == 'unavailable' %}
+  🔌 **Conexión no disponible.** Revisa la integración si solicita volver a autorizar la cuenta.
+  {% elif states(entity) == 'unknown' and not shipments and state_attr(entity, 'orders_checked') is none %}
+  ⏳ **Esperando datos de Mercado Libre.**
+  {% else %}
+  {% set active = shipments | rejectattr('status', 'in', terminal) | list %}
+  {% set delivered = shipments | selectattr('status', 'eq', 'delivered') | list %}
+  {% set other = shipments | selectattr('status', 'in', ['cancelled', 'not_delivered']) | list %}
+  {% if states(entity) not in ['unknown', 'unavailable'] %}
+  ### 📦 {{ states(entity) }} {{ 'envío activo' if states(entity) == '1' else 'envíos activos' }}
+  {% else %}
+  ### 🔎 Seguimiento parcial
+  {% endif %}
+  {% if state_attr(entity, 'truncated') %}
+  ⚠️ Consulta parcial: {{ state_attr(entity, 'orders_checked') }} de {{ state_attr(entity, 'orders_total') }} compras. El total de envíos activos no está disponible.
+  {% endif %}
+  {% if state_attr(entity, 'unknown_shipments') %}
+  ❔ {{ state_attr(entity, 'unknown_shipments') }} envíos con estado pendiente de clasificación.
+  {% endif %}
+  
+  {% if state_attr(entity, 'orders_checked') is not none %}
+  🛍️ **Compras consultadas:** {{ state_attr(entity, 'orders_checked') }}{% if state_attr(entity, 'orders_total') is not none %} de {{ state_attr(entity, 'orders_total') }}{% endif %} · 📦 **Envíos encontrados:** {{ shipments | count }}
+  {% endif %}
+  
+  {% if active %}
+  {% for shipment in active %}
+  {{ package(shipment) }}
+  {% endfor %}
+  {% else %}
+  ✨ No hay envíos activos entre las compras consultadas.
+  {% endif %}
+  
+  {% if delivered %}
+  <details>
+  <summary>✅ Entregados · {{ delivered | count }}</summary>
+  
+  {% for shipment in delivered %}
+  {{ package(shipment) }}
+  {% endfor %}
+  </details>
+  {% endif %}
+  
+  {% if other %}
+  <details>
+  <summary>⚠️ Cancelados o no entregados · {{ other | count }}</summary>
+  
+  {% for shipment in other %}
+  {{ package(shipment) }}
+  {% endfor %}
+  </details>
+  {% endif %}
+  
+  {% if state_attr(entity, 'orders_without_shipment') %}
+  🧾 **Compras sin envío asociado:** {{ state_attr(entity, 'orders_without_shipment') }}
+  {% endif %}
+  {% endif %}
+grid_options:
+  columns: full
+  rows: auto

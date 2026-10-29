@@ -8,10 +8,10 @@
   "dependencies": [
     "application_credentials"
   ],
-  "documentation": "https://github.com/maniac75/mercadolibre-compras",
+  "documentation": "https://github.com/maniac75/ha-mercadolibre",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/maniac75/mercadolibre-compras/issues",
+  "issue_tracker": "https://github.com/maniac75/ha-mercadolibre/issues",
   "requirements": [],
   "version": "0.2.0b1"
 }

@@ -14,7 +14,7 @@ def main():
     version = manifest["version"]
     assert manifest["domain"] == "mercadolibre_tracking"
     files = [
-        p for p in COMPONENT.rglob("*") if p.is_file() and p.suffix in {".py", ".json", ".png"} and "__pycache__" not in p.parts
+        p for p in COMPONENT.rglob("*") if p.is_file() and p.suffix in {".py", ".json", ".png", ".yaml"} and "__pycache__" not in p.parts
     ]
     files += [
         ROOT / n

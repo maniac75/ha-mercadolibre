@@ -1,0 +1,21 @@
+{
+  "title": "Mercado Libre Compras",
+  "application_credentials": {
+    "description": "Crea una aplicación en [DevCenter]({console_url}). Registra `https://my.home-assistant.io/redirect/oauth` como URL de redirección y activa PKCE, lectura y acceso offline. Introduce su Client ID y Client Secret."
+  },
+  "config": {
+    "step": {
+      "reauth_confirm": {
+        "title": "Volver a autorizar Mercado Libre",
+        "description": "Conecta nuevamente la misma cuenta de Mercado Libre para recuperar acceso a tus compras."
+      }
+    },
+    "abort": {
+      "access_denied": "Mercado Libre no autorizó la lectura de tus compras. Revisa los permisos de la aplicación.",
+      "cannot_connect": "No fue posible conectar con Mercado Libre.",
+      "already_configured": "Esta cuenta ya está configurada.",
+      "unique_id_mismatch": "Debes autorizar la misma cuenta de Mercado Libre.",
+      "reauth_successful": "La cuenta se volvió a autorizar correctamente."
+    }
+  }
+}

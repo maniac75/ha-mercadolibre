@@ -1,0 +1,17 @@
+{
+  "domain": "mercadolibre_tracking",
+  "name": "Mercado Libre Compras",
+  "codeowners": [
+    "@maniac75"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "application_credentials"
+  ],
+  "documentation": "https://github.com/maniac75/mercadolibre-compras",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "version": "0.2.0b1",
+  "issue_tracker": "https://github.com/maniac75/mercadolibre-compras/issues"
+}

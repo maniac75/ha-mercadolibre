@@ -1,0 +1,22 @@
+name: Informar un problema
+description: Error de instalación, conexión o seguimiento
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Versión de la integración y Home Assistant
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Qué ocurrió y qué esperabas
+      description: No incluyas datos de tu cuenta o compras.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Registro del error
+      description: Retira credenciales, tokens e identificadores antes de compartirlo.
+      render: text

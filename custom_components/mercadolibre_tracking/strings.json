@@ -1,0 +1,21 @@
+{
+  "title": "Mercado Libre Compras",
+  "application_credentials": {
+    "description": "Create an application in [DevCenter]({console_url}). Register `https://my.home-assistant.io/redirect/oauth` as the redirect URI and enable PKCE, read access and offline access. Enter the application's Client ID and Client Secret."
+  },
+  "config": {
+    "step": {
+      "reauth_confirm": {
+        "title": "Reauthorize Mercado Libre",
+        "description": "Reconnect the same Mercado Libre account to restore access to your purchases."
+      }
+    },
+    "abort": {
+      "access_denied": "Mercado Libre denied access to your purchases. Check the application's permissions.",
+      "cannot_connect": "Unable to connect to Mercado Libre.",
+      "already_configured": "This account is already configured.",
+      "unique_id_mismatch": "Authorize the same Mercado Libre account.",
+      "reauth_successful": "The account was successfully reauthorized."
+    }
+  }
+}
